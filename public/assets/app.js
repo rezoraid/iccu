@@ -129,6 +129,7 @@
     const fieldsEl = node.querySelector('.fields');
     const runBtn = node.querySelector('.run-btn');
     const autofillBtn = node.querySelector('.autofill-btn');
+    const endpointBox = node.querySelector('.endpoint-box');
     const builtUrl = node.querySelector('.built-url');
     const copyEndpointBtn = node.querySelector('.copy-endpoint-btn');
     const resultBox = node.querySelector('.result');
@@ -245,6 +246,7 @@
       updateBuiltUrl();
       const url = currentUrl;
 
+      endpointBox.hidden = false;
       resultBox.hidden = false;
       resultLoading.hidden = false;
       resultLoading.classList.remove('is-done');
@@ -278,7 +280,6 @@
           resultSize.textContent = formatBytes(blob.size);
           resultImage.src = URL.createObjectURL(blob);
           resultImage.hidden = false;
-          downloadBtn.hidden = false;
           copyLabel.textContent = 'Salin URL';
           lastResultText = url;
         } else {

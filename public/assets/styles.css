@@ -335,16 +335,59 @@ button {
 .field input:focus { border-color: var(--accent); }
 .field input.invalid { border-color: var(--bad); background: var(--bad-soft); }
 
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.run-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+.run-btn:hover { background: var(--accent-hover); }
+.run-btn:active { transform: scale(0.98); }
+.run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.autofill-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: var(--text-dim);
+  border: 2px solid var(--border);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.autofill-btn:hover { border-color: var(--accent); color: var(--accent); }
+.autofill-btn:active { transform: scale(0.98); }
+
 .endpoint-box {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--panel);
   padding: 10px 12px;
 }
+
+.endpoint-box[hidden] { display: none; }
 
 .endpoint-label {
   flex-shrink: 0;
@@ -389,47 +432,6 @@ button {
 
 .copy-endpoint-btn:hover { background: var(--border); color: var(--text); }
 .copy-endpoint-btn.copied { background: var(--good); color: #fff; border-color: var(--good); }
-
-.row-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-.run-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  font-weight: 700;
-  font-size: 13px;
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  transition: background 0.12s ease, transform 0.08s ease;
-}
-.run-btn:hover { background: var(--accent-hover); }
-.run-btn:active { transform: scale(0.98); }
-.run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.autofill-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #fff;
-  color: var(--text-dim);
-  border: 2px solid var(--border);
-  font-weight: 700;
-  font-size: 12px;
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
-}
-.autofill-btn:hover { border-color: var(--accent); color: var(--accent); }
-.autofill-btn:active { transform: scale(0.98); }
 
 .result {
   margin-top: 0;
