@@ -77,25 +77,25 @@
 
       <div class="fields"></div>
 
-      <div class="endpoint-box">
+      <div class="row-actions">
+        <button class="autofill-btn" type="button" title="Isi contoh data biar bisa langsung dicoba">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Example
+        </button>
+        <button class="run-btn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Try It
+        </button>
+      </div>
+
+      <div class="endpoint-box" hidden>
         <span class="endpoint-label">Endpoint</span>
         <div class="endpoint-line">
-          <code class="built-url">Isi kolom di bawah untuk menyusun link endpoint</code>
+          <code class="built-url"></code>
           <button class="copy-endpoint-btn" type="button" title="Salin link endpoint" aria-label="Salin link endpoint">
             <svg class="icon-copy" width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
           </button>
         </div>
-      </div>
-
-      <div class="row-actions">
-        <button class="autofill-btn" type="button" title="Isi contoh data biar bisa langsung dicoba">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          Try It
-        </button>
-        <button class="run-btn" type="button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          Run
-        </button>
       </div>
 
       <div class="result" hidden>
