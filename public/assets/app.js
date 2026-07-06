@@ -129,8 +129,6 @@
     const fieldsEl = node.querySelector('.fields');
     const runBtn = node.querySelector('.run-btn');
     const autofillBtn = node.querySelector('.autofill-btn');
-    const builtUrl = node.querySelector('.built-url');
-    const copyEndpointBtn = node.querySelector('.copy-endpoint-btn');
     const resultBox = node.querySelector('.result');
     const resultLoading = node.querySelector('.result-loading');
     const resultHead = node.querySelector('.result-head');
@@ -144,7 +142,7 @@
     let lastResultText = '';
     let currentUrl = '';
 
-    function updateBuiltUrl() {
+    function getCurrentUrl() {
       const inputs = [...fieldsEl.querySelectorAll('input')];
       const query = new URLSearchParams();
       inputs.forEach((input) => {
@@ -152,8 +150,7 @@
         if (val) query.set(input.dataset.key, val);
       });
       const qs = query.toString();
-      currentUrl = `${window.location.origin}${route.path}${qs ? `?${qs}` : ''}`;
-      builtUrl.textContent = currentUrl;
+      return `${window.location.origin}${route.path}${qs ? `?${qs}` : ''}`;
     }
 
     function highlightInputs() {
@@ -179,24 +176,13 @@
       input.dataset.key = param.key;
       input.dataset.required = param.required ? '1' : '0';
       
-      if (param.example) {
-        input.value = param.example;
-        input.classList.add('filled');
-        setTimeout(() => {
-          input.classList.remove('filled');
-        }, 1500);
-      }
-      
       input.addEventListener('input', () => {
         input.classList.remove('invalid');
         input.classList.remove('filled');
-        updateBuiltUrl();
       });
       wrap.appendChild(input);
       fieldsEl.appendChild(wrap);
     });
-
-    updateBuiltUrl();
 
     if (!route.params.length) {
       autofillBtn.hidden = true;
@@ -216,15 +202,10 @@
           }, 1500);
         }
       });
-      updateBuiltUrl();
     });
 
     node.querySelector('.row-head').addEventListener('click', () => {
       node.classList.toggle('open');
-    });
-
-    copyEndpointBtn.addEventListener('click', () => {
-      copyText(currentUrl, copyEndpointBtn);
     });
 
     copyResultBtn.addEventListener('click', () => {
@@ -247,8 +228,7 @@
 
       if (!valid) return;
 
-      updateBuiltUrl();
-      const url = currentUrl;
+      currentUrl = getCurrentUrl();
 
       resultBox.hidden = false;
       resultLoading.hidden = false;
@@ -267,7 +247,7 @@
       const startedAt = performance.now();
 
       try {
-        const response = await fetch(url);
+        const response = await fetch(currentUrl);
         const elapsedMs = Math.round(performance.now() - startedAt);
         const contentType = response.headers.get('Content-Type') || '';
 
@@ -280,7 +260,7 @@
           resultSize.textContent = formatBytes(blob.size);
           resultImage.src = URL.createObjectURL(blob);
           resultImage.hidden = false;
-          lastResultText = url;
+          lastResultText = currentUrl;
         } else {
           const rawText = await response.text();
           resultSize.textContent = formatBytes(new Blob([rawText]).size);
@@ -288,7 +268,9 @@
           try {
             pretty = JSON.stringify(JSON.parse(rawText), null, 2);
           } catch (_) { }
-          resultJson.textContent = pretty;
+          
+          const endpointInfo = `Endpoint: ${currentUrl}\n\n`;
+          resultJson.textContent = endpointInfo + pretty;
           resultJson.hidden = false;
           lastResultText = pretty;
         }
@@ -303,8 +285,9 @@
         resultTime.textContent = `${elapsedMs} ms`;
         resultSize.textContent = '—';
 
+        const endpointInfo = `Endpoint: ${currentUrl}\n\n`;
         const message = `Request gagal: ${err.message}`;
-        resultJson.textContent = message;
+        resultJson.textContent = endpointInfo + message;
         resultJson.hidden = false;
         lastResultText = message;
       } finally {
