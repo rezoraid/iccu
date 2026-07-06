@@ -153,6 +153,22 @@
     }
   }
 
+  const SAMPLE_BY_KEY = {
+    text: 'Halo, apa kabar?',
+    q: 'lofi hip hop',
+    query: 'lofi hip hop',
+    model: 'gpt-4o-mini',
+    url: 'https://example.com',
+    prompt: 'Kucing lucu di taman'
+  };
+
+  function sampleFor(param) {
+    if (param.sample) return param.sample;
+    const byKey = SAMPLE_BY_KEY[param.key.toLowerCase()];
+    if (byKey) return byKey;
+    return 'contoh';
+  }
+
   function buildRow(route) {
     const node = rowTemplate.content.firstElementChild.cloneNode(true);
     node.querySelector('.verb').textContent = route.method;
@@ -162,6 +178,7 @@
 
     const fieldsEl = node.querySelector('.fields');
     const runBtn = node.querySelector('.run-btn');
+    const autofillBtn = node.querySelector('.autofill-btn');
     const builtUrl = node.querySelector('.built-url');
     const copyEndpointBtn = node.querySelector('.copy-endpoint-btn');
     const resultBox = node.querySelector('.result');
@@ -208,6 +225,20 @@
     });
 
     updateBuiltUrl();
+
+    if (!route.params.length) {
+      autofillBtn.hidden = true;
+    }
+
+    autofillBtn.addEventListener('click', () => {
+      const inputs = [...fieldsEl.querySelectorAll('input')];
+      inputs.forEach((input) => {
+        const param = route.params.find((p) => p.key === input.dataset.key);
+        input.value = sampleFor(param);
+        input.classList.remove('invalid');
+      });
+      updateBuiltUrl();
+    });
 
     node.querySelector('.row-head').addEventListener('click', () => {
       node.classList.toggle('open');

@@ -13,7 +13,7 @@ module.exports = {
   },
   telegram: {
     token: process.env.TELEGRAM_BOT_TOKEN || '8430060783:AAFuXyzlfad7zrtpgIFvgtlnNJwaIQCryVk',
-    ownerIds: (process.env.TELEGRAM_OWNER_IDS || '8430060783')
+    ownerIds: (process.env.TELEGRAM_OWNER_IDS || '8774505908')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)

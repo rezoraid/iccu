@@ -27,7 +27,6 @@
       <div class="rail-stat">
         <span id="routeCount">0</span> endpoint aktif
       </div>
-      <a href="/manifest.json" class="rail-link">manifest.json</a>
     </div>
   </aside>
 
@@ -74,19 +73,24 @@
     </button>
     <div class="row-body">
       <p class="desc"></p>
-      <div class="fields"></div>
 
       <div class="endpoint-box">
         <span class="endpoint-label">Endpoint</span>
         <div class="endpoint-line">
-          <code class="built-url">Isi kolom di atas untuk menyusun link endpoint</code>
+          <code class="built-url">Isi kolom di bawah untuk menyusun link endpoint</code>
           <button class="copy-endpoint-btn" type="button" title="Salin link endpoint" aria-label="Salin link endpoint">
             <svg class="icon-copy" width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
           </button>
         </div>
       </div>
 
+      <div class="fields"></div>
+
       <div class="row-actions">
+        <button class="autofill-btn" type="button" title="Isi contoh data biar bisa langsung dicoba">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Isi contoh
+        </button>
         <button class="run-btn" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 4l14 8-14 8V4z" fill="currentColor"/></svg>
           Jalankan request
