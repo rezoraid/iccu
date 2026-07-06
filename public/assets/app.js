@@ -4,12 +4,14 @@
   const el = (id) => document.getElementById(id);
   const rowTemplate = el('routeRowTemplate');
   const logEl = el('log');
+  const chipRow = el('chipRow');
   const bootLoader = el('bootLoader');
   const filterInput = el('filterInput');
   const copyBaseBtn = el('copyBaseBtn');
 
   let manifest = null;
   let routes = [];
+  let activeMode = 'all'; // 'all' | <group key>
 
   function groupLabel(key) {
     return manifest.groups[key]?.label || key;
@@ -71,6 +73,7 @@
       el('baseUrl').textContent = window.location.origin;
       document.title = manifest.identity.name;
 
+      renderChips();
       renderLog();
     } catch (err) {
       logEl.innerHTML = '<p class="empty-state">Gagal memuat endpoint. Coba muat ulang halaman.</p>';
@@ -78,6 +81,38 @@
     } finally {
       bootLoader.hidden = true;
     }
+  }
+
+  function renderChips() {
+    const groups = [...new Set(routes.map((r) => r.group))].sort(
+      (a, b) => groupOrder(a) - groupOrder(b)
+    );
+
+    chipRow.innerHTML = '';
+
+    const makeChip = (mode, label, count) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chip';
+      btn.dataset.mode = mode;
+      btn.classList.toggle('active', mode === activeMode);
+      btn.innerHTML = `${label}<span class="chip-count">${count}</span>`;
+      return btn;
+    };
+
+    chipRow.appendChild(makeChip('all', 'Semua', routes.length));
+    groups.forEach((g) => {
+      const count = routes.filter((r) => r.group === g).length;
+      chipRow.appendChild(makeChip(g, groupLabel(g), count));
+    });
+
+    chipRow.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      activeMode = btn.dataset.mode;
+      [...chipRow.children].forEach((c) => c.classList.toggle('active', c === btn));
+      renderLog();
+    });
   }
 
   function renderLog() {
@@ -90,6 +125,8 @@
     );
 
     groups.forEach((g) => {
+      if (activeMode !== 'all' && activeMode !== g) return;
+
       const items = routes.filter((r) => {
         if (r.group !== g) return false;
         if (term && !(r.name.toLowerCase().includes(term) || r.path.toLowerCase().includes(term))) {
