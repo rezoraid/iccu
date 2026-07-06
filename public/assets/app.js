@@ -156,6 +156,18 @@
       builtUrl.textContent = currentUrl;
     }
 
+    function highlightInputs() {
+      const inputs = [...fieldsEl.querySelectorAll('input')];
+      inputs.forEach((input) => {
+        if (input.value.trim()) {
+          input.classList.add('filled');
+          setTimeout(() => {
+            input.classList.remove('filled');
+          }, 1500);
+        }
+      });
+    }
+
     route.params.forEach((param) => {
       const wrap = document.createElement('div');
       wrap.className = 'field';
@@ -169,10 +181,15 @@
       
       if (param.example) {
         input.value = param.example;
+        input.classList.add('filled');
+        setTimeout(() => {
+          input.classList.remove('filled');
+        }, 1500);
       }
       
       input.addEventListener('input', () => {
         input.classList.remove('invalid');
+        input.classList.remove('filled');
         updateBuiltUrl();
       });
       wrap.appendChild(input);
@@ -193,6 +210,10 @@
           const sampleValue = sampleFor(param);
           input.value = sampleValue;
           input.classList.remove('invalid');
+          input.classList.add('filled');
+          setTimeout(() => {
+            input.classList.remove('filled');
+          }, 1500);
         }
       });
       updateBuiltUrl();
