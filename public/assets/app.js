@@ -116,7 +116,7 @@
 
   function sampleFor(param) {
     if (param.example) return param.example;
-    return 'contoh';
+    return '';
   }
 
   function buildRow(route) {
@@ -129,6 +129,8 @@
     const fieldsEl = node.querySelector('.fields');
     const runBtn = node.querySelector('.run-btn');
     const autofillBtn = node.querySelector('.autofill-btn');
+    const builtUrl = node.querySelector('.built-url');
+    const copyEndpointBtn = node.querySelector('.copy-endpoint-btn');
     const resultBox = node.querySelector('.result');
     const resultLoading = node.querySelector('.result-loading');
     const resultHead = node.querySelector('.result-head');
@@ -136,13 +138,16 @@
     const resultTime = node.querySelector('.result-time');
     const resultSize = node.querySelector('.result-size');
     const copyResultBtn = node.querySelector('.copy-result-btn');
+    const copyLabel = node.querySelector('.copy-label');
     const resultJson = node.querySelector('.result-json');
     const resultImage = node.querySelector('.result-image');
+    const downloadBtn = node.querySelector('.download-btn');
 
     let lastResultText = '';
+    let lastResultBlob = null;
     let currentUrl = '';
 
-    function getCurrentUrl() {
+    function updateBuiltUrl() {
       const inputs = [...fieldsEl.querySelectorAll('input')];
       const query = new URLSearchParams();
       inputs.forEach((input) => {
@@ -150,19 +155,8 @@
         if (val) query.set(input.dataset.key, val);
       });
       const qs = query.toString();
-      return `${window.location.origin}${route.path}${qs ? `?${qs}` : ''}`;
-    }
-
-    function highlightInputs() {
-      const inputs = [...fieldsEl.querySelectorAll('input')];
-      inputs.forEach((input) => {
-        if (input.value.trim()) {
-          input.classList.add('filled');
-          setTimeout(() => {
-            input.classList.remove('filled');
-          }, 1500);
-        }
-      });
+      currentUrl = `${window.location.origin}${route.path}${qs ? `?${qs}` : ''}`;
+      builtUrl.textContent = currentUrl;
     }
 
     route.params.forEach((param) => {
@@ -178,11 +172,13 @@
       
       input.addEventListener('input', () => {
         input.classList.remove('invalid');
-        input.classList.remove('filled');
+        updateBuiltUrl();
       });
       wrap.appendChild(input);
       fieldsEl.appendChild(wrap);
     });
+
+    updateBuiltUrl();
 
     if (!route.params.length) {
       autofillBtn.hidden = true;
@@ -196,20 +192,38 @@
           const sampleValue = sampleFor(param);
           input.value = sampleValue;
           input.classList.remove('invalid');
-          input.classList.add('filled');
-          setTimeout(() => {
-            input.classList.remove('filled');
-          }, 1500);
         }
       });
+      updateBuiltUrl();
     });
 
     node.querySelector('.row-head').addEventListener('click', () => {
       node.classList.toggle('open');
     });
 
+    copyEndpointBtn.addEventListener('click', () => {
+      copyText(currentUrl, copyEndpointBtn);
+    });
+
     copyResultBtn.addEventListener('click', () => {
-      copyText(lastResultText, copyResultBtn);
+      if (lastResultBlob) {
+        copyText(currentUrl, copyResultBtn);
+      } else {
+        copyText(lastResultText, copyResultBtn);
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (lastResultBlob) {
+        const url = URL.createObjectURL(lastResultBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `download-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     });
 
     runBtn.addEventListener('click', async () => {
@@ -228,7 +242,8 @@
 
       if (!valid) return;
 
-      currentUrl = getCurrentUrl();
+      updateBuiltUrl();
+      const url = currentUrl;
 
       resultBox.hidden = false;
       resultLoading.hidden = false;
@@ -236,6 +251,8 @@
       resultHead.hidden = true;
       resultJson.hidden = true;
       resultImage.hidden = true;
+      downloadBtn.hidden = true;
+      copyLabel.textContent = 'Salin';
       runBtn.disabled = true;
 
       const stopLoading = () => {
@@ -247,7 +264,7 @@
       const startedAt = performance.now();
 
       try {
-        const response = await fetch(currentUrl);
+        const response = await fetch(url);
         const elapsedMs = Math.round(performance.now() - startedAt);
         const contentType = response.headers.get('Content-Type') || '';
 
@@ -257,21 +274,24 @@
 
         if (contentType.startsWith('image/')) {
           const blob = await response.blob();
+          lastResultBlob = blob;
           resultSize.textContent = formatBytes(blob.size);
           resultImage.src = URL.createObjectURL(blob);
           resultImage.hidden = false;
-          lastResultText = currentUrl;
+          downloadBtn.hidden = false;
+          copyLabel.textContent = 'Salin URL';
+          lastResultText = url;
         } else {
+          lastResultBlob = null;
           const rawText = await response.text();
           resultSize.textContent = formatBytes(new Blob([rawText]).size);
           let pretty = rawText;
           try {
             pretty = JSON.stringify(JSON.parse(rawText), null, 2);
           } catch (_) { }
-          
-          const endpointInfo = `Endpoint: ${currentUrl}\n\n`;
-          resultJson.textContent = endpointInfo + pretty;
+          resultJson.textContent = pretty;
           resultJson.hidden = false;
+          copyLabel.textContent = 'Salin';
           lastResultText = pretty;
         }
 
@@ -285,11 +305,12 @@
         resultTime.textContent = `${elapsedMs} ms`;
         resultSize.textContent = '—';
 
-        const endpointInfo = `Endpoint: ${currentUrl}\n\n`;
         const message = `Request gagal: ${err.message}`;
-        resultJson.textContent = endpointInfo + message;
+        resultJson.textContent = message;
         resultJson.hidden = false;
+        copyLabel.textContent = 'Salin';
         lastResultText = message;
+        lastResultBlob = null;
       } finally {
         clearTimeout(safetyTimeout);
         stopLoading();
