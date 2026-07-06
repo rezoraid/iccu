@@ -142,7 +142,6 @@
     const copyLabel = node.querySelector('.copy-label');
     const resultJson = node.querySelector('.result-json');
     const resultImage = node.querySelector('.result-image');
-    const downloadBtn = node.querySelector('.download-btn');
 
     let lastResultText = '';
     let lastResultBlob = null;
@@ -208,14 +207,6 @@
 
     copyResultBtn.addEventListener('click', () => {
       if (lastResultBlob) {
-        copyText(currentUrl, copyResultBtn);
-      } else {
-        copyText(lastResultText, copyResultBtn);
-      }
-    });
-
-    downloadBtn.addEventListener('click', () => {
-      if (lastResultBlob) {
         const url = URL.createObjectURL(lastResultBlob);
         const a = document.createElement('a');
         a.href = url;
@@ -224,6 +215,8 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      } else {
+        copyText(lastResultText, copyResultBtn);
       }
     });
 
@@ -253,8 +246,6 @@
       resultHead.hidden = true;
       resultJson.hidden = true;
       resultImage.hidden = true;
-      downloadBtn.hidden = true;
-      copyLabel.textContent = 'Salin';
       runBtn.disabled = true;
 
       const stopLoading = () => {
@@ -280,7 +271,8 @@
           resultSize.textContent = formatBytes(blob.size);
           resultImage.src = URL.createObjectURL(blob);
           resultImage.hidden = false;
-          copyLabel.textContent = 'Salin URL';
+          copyLabel.textContent = 'Unduh';
+          copyResultBtn.querySelector('.icon-copy').outerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
           lastResultText = url;
         } else {
           lastResultBlob = null;
@@ -293,6 +285,7 @@
           resultJson.textContent = pretty;
           resultJson.hidden = false;
           copyLabel.textContent = 'Salin';
+          copyResultBtn.querySelector('.icon-copy').outerHTML = '<svg class="icon-copy" width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>';
           lastResultText = pretty;
         }
 
@@ -310,6 +303,7 @@
         resultJson.textContent = message;
         resultJson.hidden = false;
         copyLabel.textContent = 'Salin';
+        copyResultBtn.querySelector('.icon-copy').outerHTML = '<svg class="icon-copy" width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>';
         lastResultText = message;
         lastResultBlob = null;
       } finally {

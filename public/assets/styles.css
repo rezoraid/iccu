@@ -279,6 +279,7 @@ button {
   flex-shrink: 0;
   display: flex;
   transition: transform 0.15s ease;
+  margin-left: auto;
 }
 
 .row.open .chev { transform: rotate(180deg); color: var(--accent); }
@@ -379,7 +380,6 @@ button {
 .endpoint-box {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   margin-bottom: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -388,16 +388,6 @@ button {
 }
 
 .endpoint-box[hidden] { display: none; }
-
-.endpoint-label {
-  flex-shrink: 0;
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
 
 .endpoint-line {
   display: flex;
@@ -409,8 +399,9 @@ button {
   flex: 1;
   min-width: 0;
   font-family: var(--mono);
-  font-size: 12.5px;
-  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
   overflow-wrap: anywhere;
   word-break: break-all;
   line-height: 1.5;
@@ -455,8 +446,7 @@ button {
 .result-loading[hidden],
 .result-head[hidden],
 .result-json[hidden],
-.result-image[hidden],
-.download-btn[hidden] {
+.result-image[hidden] {
   display: none;
 }
 
@@ -517,21 +507,6 @@ button {
 }
 .copy-result-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 .copy-result-btn.copied { background: var(--good); color: #fff; border-color: var(--good); }
-
-.download-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #fff;
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-weight: 700;
-  font-size: 12.5px;
-  padding: 7px 12px;
-  border-radius: var(--radius-sm);
-  transition: background 0.12s ease, color 0.12s ease;
-}
-.download-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 .result-json {
   margin: 0;
