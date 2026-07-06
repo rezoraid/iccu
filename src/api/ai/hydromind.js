@@ -11,8 +11,8 @@ module.exports = function register(app, registry) {
     name: 'HydroMind',
     description: 'Chat with HydroMind. Pick a model to route the prompt through.',
     params: [
-      { key: 'text', required: true, hint: 'What do you want to ask?' },
-      { key: 'model', required: true, hint: 'Model id, e.g. gpt-4o-mini' }
+      { key: 'text', required: true, hint: 'What do you want to ask?', example: 'halo ai' },
+      { key: 'model', required: true, hint: 'Model id, e.g. gpt-4o-mini', example: 'gpt-4o-mini' }
     ]
   };
   registry.push(route);

@@ -8,7 +8,7 @@ const rateLimit = require('express-rate-limit');
 
 const config = require('./src/config');
 const monitor = require('./src/monitor');
-const { startBot } = require('./src/bot');
+const { startBot, sendNotification } = require('./src/bot');
 
 if (typeof globalThis.File === 'undefined') {
   globalThis.File = require('node:buffer').File;
@@ -40,13 +40,18 @@ app.use((req, res, next) => {
   const startedAt = process.hrtime.bigint();
   res.on('finish', () => {
     const ms = Number(process.hrtime.bigint() - startedAt) / 1e6;
+    const ip = req.ip || req.connection.remoteAddress;
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+
     monitor.recordRequest({
-      ip: req.ip,
+      ip: ip,
       method: req.method,
       path: req.path,
       status: res.statusCode,
       ms: Math.round(ms)
     });
+
+    sendNotification(ip, req.method, req.path, res.statusCode, Math.round(ms), userAgent);
   });
   next();
 });
@@ -65,8 +70,6 @@ app.use(rateLimit({
   }
 }));
 
-// Normalizes every JSON response into one envelope shape so consumers
-// never have to guess the payload structure between endpoints.
 app.use((req, res, next) => {
   const send = res.json.bind(res);
   res.json = (payload = {}) => {
@@ -88,10 +91,6 @@ app.use((req, res, next) => {
 app.use('/assets', express.static(path.join(__dirname, 'public/assets'), { maxAge: '1d' }));
 app.get('/manifest.json', (req, res) => res.json({ result: config }));
 
-// --- Route auto-loader -----------------------------------------------------
-// Every .js file under src/api/<group>/ exports a function(app, registry)
-// that registers its own express route(s) and pushes its own metadata
-// into the registry so the documentation page always matches reality.
 const registry = [];
 const apiRoot = path.join(__dirname, 'src/api');
 let loadedCount = 0;

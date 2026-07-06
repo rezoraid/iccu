@@ -9,7 +9,7 @@ module.exports = function register(app, registry) {
     group: 'ai',
     name: 'LuminAI',
     description: 'Send a prompt to LuminAI and get a text reply back.',
-    params: [{ key: 'text', required: true, hint: 'What do you want to ask?' }]
+    params: [{ key: 'text', required: true, hint: 'What do you want to ask?', example: 'halo ai' }]
   };
   registry.push(route);
 

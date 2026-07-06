@@ -4,14 +4,12 @@
   const el = (id) => document.getElementById(id);
   const rowTemplate = el('routeRowTemplate');
   const logEl = el('log');
-  const chipRow = el('chipRow');
   const bootLoader = el('bootLoader');
   const filterInput = el('filterInput');
   const copyBaseBtn = el('copyBaseBtn');
 
   let manifest = null;
   let routes = [];
-  let activeMode = 'all'; // 'all' | <group key>
 
   function groupLabel(key) {
     return manifest.groups[key]?.label || key;
@@ -31,7 +29,6 @@
     try {
       await navigator.clipboard.writeText(text);
     } catch (err) {
-      // fallback for older/unsupported contexts
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
@@ -48,7 +45,6 @@
       if (labelSpan) {
         labelSpan.textContent = 'Tersalin!';
       } else {
-        // Tombol icon-only (tidak ada label teks): tampilkan tanda centang sementara.
         btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       }
       setTimeout(() => {
@@ -73,7 +69,6 @@
       el('baseUrl').textContent = window.location.origin;
       document.title = manifest.identity.name;
 
-      renderChips();
       renderLog();
     } catch (err) {
       logEl.innerHTML = '<p class="empty-state">Gagal memuat endpoint. Coba muat ulang halaman.</p>';
@@ -81,38 +76,6 @@
     } finally {
       bootLoader.hidden = true;
     }
-  }
-
-  function renderChips() {
-    const groups = [...new Set(routes.map((r) => r.group))].sort(
-      (a, b) => groupOrder(a) - groupOrder(b)
-    );
-
-    chipRow.innerHTML = '';
-
-    const makeChip = (mode, label, count) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'chip';
-      btn.dataset.mode = mode;
-      btn.classList.toggle('active', mode === activeMode);
-      btn.innerHTML = `${label}<span class="chip-count">${count}</span>`;
-      return btn;
-    };
-
-    chipRow.appendChild(makeChip('all', 'Semua', routes.length));
-    groups.forEach((g) => {
-      const count = routes.filter((r) => r.group === g).length;
-      chipRow.appendChild(makeChip(g, groupLabel(g), count));
-    });
-
-    chipRow.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip');
-      if (!btn) return;
-      activeMode = btn.dataset.mode;
-      [...chipRow.children].forEach((c) => c.classList.toggle('active', c === btn));
-      renderLog();
-    });
   }
 
   function renderLog() {
@@ -125,8 +88,6 @@
     );
 
     groups.forEach((g) => {
-      if (activeMode !== 'all' && activeMode !== g) return;
-
       const items = routes.filter((r) => {
         if (r.group !== g) return false;
         if (term && !(r.name.toLowerCase().includes(term) || r.path.toLowerCase().includes(term))) {
@@ -153,19 +114,8 @@
     }
   }
 
-  const SAMPLE_BY_KEY = {
-    text: 'Halo, apa kabar?',
-    q: 'lofi hip hop',
-    query: 'lofi hip hop',
-    model: 'gpt-4o-mini',
-    url: 'https://example.com',
-    prompt: 'Kucing lucu di taman'
-  };
-
   function sampleFor(param) {
-    if (param.sample) return param.sample;
-    const byKey = SAMPLE_BY_KEY[param.key.toLowerCase()];
-    if (byKey) return byKey;
+    if (param.example) return param.example;
     return 'contoh';
   }
 
@@ -216,6 +166,11 @@
       input.placeholder = param.hint || '';
       input.dataset.key = param.key;
       input.dataset.required = param.required ? '1' : '0';
+      
+      if (param.example) {
+        input.value = param.example;
+      }
+      
       input.addEventListener('input', () => {
         input.classList.remove('invalid');
         updateBuiltUrl();
@@ -234,8 +189,11 @@
       const inputs = [...fieldsEl.querySelectorAll('input')];
       inputs.forEach((input) => {
         const param = route.params.find((p) => p.key === input.dataset.key);
-        input.value = sampleFor(param);
-        input.classList.remove('invalid');
+        if (param) {
+          const sampleValue = sampleFor(param);
+          input.value = sampleValue;
+          input.classList.remove('invalid');
+        }
       });
       updateBuiltUrl();
     });
@@ -279,9 +237,6 @@
       resultImage.hidden = true;
       runBtn.disabled = true;
 
-      // Safety valve: kalau karena sesuatu hal request menggantung lebih
-      // dari 20 detik, paksa keluar dari state loading supaya spinner
-      // tidak berputar selamanya.
       const stopLoading = () => {
         resultLoading.hidden = true;
         runBtn.disabled = false;
@@ -311,7 +266,7 @@
           let pretty = rawText;
           try {
             pretty = JSON.stringify(JSON.parse(rawText), null, 2);
-          } catch (_) { /* not JSON, show as-is */ }
+          } catch (_) { }
           resultJson.textContent = pretty;
           resultJson.hidden = false;
           lastResultText = pretty;

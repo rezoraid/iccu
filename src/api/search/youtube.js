@@ -9,7 +9,7 @@ module.exports = function register(app, registry) {
     group: 'search',
     name: 'YouTube search',
     description: 'Search YouTube videos and get back title, channel, duration and link.',
-    params: [{ key: 'q', required: true, hint: 'Search keywords' }]
+    params: [{ key: 'q', required: true, hint: 'Search keywords', example: 'dj full bass' }]
   };
   registry.push(route);
 

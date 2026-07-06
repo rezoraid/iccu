@@ -3,6 +3,9 @@
 const TelegramBot = require('node-telegram-bot-api');
 const monitor = require('./monitor');
 
+let botInstance = null;
+let configInstance = null;
+
 function startBot(config) {
   const token = config.telegram?.token;
   const ownerIds = config.telegram?.ownerIds || [];
@@ -12,17 +15,18 @@ function startBot(config) {
     return null;
   }
 
-  const bot = new TelegramBot(token, { polling: true });
+  configInstance = config;
+  botInstance = new TelegramBot(token, { polling: true });
 
   const mainMenu = {
     reply_markup: {
       inline_keyboard: [
-        [{ text: 'Statistik request', callback_data: 'stats' }],
-        [{ text: 'Log terbaru', callback_data: 'logs' }],
-        [{ text: 'IP teratas', callback_data: 'top_ips' }],
-        [{ text: 'Daftar IP diblokir', callback_data: 'list_blocked' }],
-        [{ text: 'Blokir IP', callback_data: 'block_prompt' }],
-        [{ text: 'Buka blokir IP', callback_data: 'unblock_prompt' }]
+        [{ text: '📊 Statistik Request', callback_data: 'stats' }],
+        [{ text: '📋 Log Terbaru', callback_data: 'logs' }],
+        [{ text: '🔝 IP Teratas', callback_data: 'top_ips' }],
+        [{ text: '🚫 Daftar IP Diblokir', callback_data: 'list_blocked' }],
+        [{ text: '🔒 Blokir IP', callback_data: 'block_prompt' }],
+        [{ text: '🔓 Buka Blokir IP', callback_data: 'unblock_prompt' }]
       ]
     }
   };
@@ -33,100 +37,148 @@ function startBot(config) {
   }
 
   function deny(chatId) {
-    bot.sendMessage(chatId, 'Kamu tidak punya akses ke bot ini.');
+    botInstance.sendMessage(chatId, '❌ Kamu tidak punya akses ke bot ini.');
   }
 
-  bot.onText(/\/start|\/menu/, (msg) => {
+  botInstance.onText(/\/start|\/menu/, (msg) => {
     if (!isOwner(msg)) return deny(msg.chat.id);
-    bot.sendMessage(
+    botInstance.sendMessage(
       msg.chat.id,
-      `${config.identity.name} monitor\nPilih menu di bawah.`,
+      `🤖 ${config.identity.name} Monitor\nPilih menu di bawah:`,
       mainMenu
     );
   });
 
-  bot.onText(/\/block (.+)/, (msg, match) => {
+  botInstance.onText(/\/block (.+)/, (msg, match) => {
     if (!isOwner(msg)) return deny(msg.chat.id);
     const ip = match[1].trim();
     monitor.blockIp(ip);
-    bot.sendMessage(msg.chat.id, `IP ${ip} sudah diblokir.`);
+    botInstance.sendMessage(msg.chat.id, `✅ IP ${ip} sudah diblokir.`);
   });
 
-  bot.onText(/\/unblock (.+)/, (msg, match) => {
+  botInstance.onText(/\/unblock (.+)/, (msg, match) => {
     if (!isOwner(msg)) return deny(msg.chat.id);
     const ip = match[1].trim();
     const removed = monitor.unblockIp(ip);
-    bot.sendMessage(msg.chat.id, removed ? `IP ${ip} sudah dibuka blokirnya.` : `IP ${ip} tidak ada di daftar blokir.`);
+    botInstance.sendMessage(msg.chat.id, removed ? `✅ IP ${ip} sudah dibuka blokirnya.` : `❌ IP ${ip} tidak ada di daftar blokir.`);
   });
 
-  bot.on('callback_query', async (query) => {
+  botInstance.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     if (!isOwner({ chat: { id: chatId } })) {
-      await bot.answerCallbackQuery(query.id);
+      await botInstance.answerCallbackQuery(query.id);
       return deny(chatId);
     }
 
-    switch (query.data) {
+    const data = query.data;
+
+    if (data && data.startsWith('block_')) {
+      const ip = data.replace('block_', '');
+      monitor.blockIp(ip);
+      await botInstance.answerCallbackQuery(query.id, { text: `✅ IP ${ip} diblokir!` });
+      botInstance.sendMessage(chatId, `✅ IP ${ip} berhasil diblokir.`);
+      return;
+    }
+
+    switch (data) {
       case 'stats': {
         const total = monitor.totalRequests();
         const top = monitor.topEndpoints(5);
         const lines = top.map((r) => `${r.count}x  ${r.path}`).join('\n') || 'Belum ada data.';
-        bot.sendMessage(chatId, `Total request tercatat: ${total}\n\nTop endpoint:\n${lines}`);
+        botInstance.sendMessage(chatId, `📊 Total request tercatat: ${total}\n\n🔝 Top endpoint:\n${lines}`);
         break;
       }
       case 'logs': {
         const recent = monitor.recentLog(15);
         if (!recent.length) {
-          bot.sendMessage(chatId, 'Belum ada request tercatat.');
+          botInstance.sendMessage(chatId, '📭 Belum ada request tercatat.');
           break;
         }
         const lines = recent
           .map((r) => `${r.status} ${r.method} ${r.path} (${r.ms}ms) — ${r.ip}`)
           .join('\n');
-        bot.sendMessage(chatId, `Log 15 request terakhir:\n${lines}`);
+        botInstance.sendMessage(chatId, `📋 Log 15 request terakhir:\n${lines}`);
         break;
       }
       case 'top_ips': {
         const top = monitor.topIps(10);
         if (!top.length) {
-          bot.sendMessage(chatId, 'Belum ada data IP.');
+          botInstance.sendMessage(chatId, '📭 Belum ada data IP.');
           break;
         }
         const lines = top
-          .map((r) => `${r.count}x  ${r.ip}${r.blocked ? ' (diblokir)' : ''}`)
+          .map((r) => `${r.count}x  ${r.ip}${r.blocked ? ' 🚫' : ''}`)
           .join('\n');
-        bot.sendMessage(chatId, `IP teratas:\n${lines}`);
+        botInstance.sendMessage(chatId, `🔝 IP teratas:\n${lines}`);
         break;
       }
       case 'list_blocked': {
         const blocked = monitor.listBlocked();
-        bot.sendMessage(
+        botInstance.sendMessage(
           chatId,
-          blocked.length ? `IP yang diblokir:\n${blocked.join('\n')}` : 'Belum ada IP yang diblokir.'
+          blocked.length ? `🚫 IP yang diblokir:\n${blocked.join('\n')}` : '✅ Belum ada IP yang diblokir.'
         );
         break;
       }
       case 'block_prompt': {
-        bot.sendMessage(chatId, 'Kirim perintah: /block 1.2.3.4');
+        botInstance.sendMessage(chatId, '🔒 Kirim perintah: /block 1.2.3.4');
         break;
       }
       case 'unblock_prompt': {
-        bot.sendMessage(chatId, 'Kirim perintah: /unblock 1.2.3.4');
+        botInstance.sendMessage(chatId, '🔓 Kirim perintah: /unblock 1.2.3.4');
         break;
       }
       default:
         break;
     }
 
-    await bot.answerCallbackQuery(query.id);
+    await botInstance.answerCallbackQuery(query.id);
   });
 
-  bot.on('polling_error', (err) => {
+  botInstance.on('polling_error', (err) => {
     console.error('[bot] polling error:', err.message);
   });
 
   console.log('[bot] Telegram bot started');
-  return bot;
+  return botInstance;
 }
 
-module.exports = { startBot };
+function sendNotification(ip, method, path, status, ms, userAgent) {
+  if (!botInstance || !configInstance) return;
+
+  const ownerIds = configInstance.telegram?.ownerIds || [];
+  if (!ownerIds.length) return;
+
+  const statusEmoji = status >= 200 && status < 300 ? '✅' : '❌';
+  const message = `
+🔔 *Request Masuk*
+
+📌 *IP:* \`${ip}\`
+📱 *Method:* ${method}
+🔗 *Path:* ${path}
+📊 *Status:* ${statusEmoji} ${status}
+⏱ *Waktu:* ${ms}ms
+🖥 *User Agent:* ${userAgent || 'Tidak diketahui'}
+🕐 *Waktu:* ${new Date().toISOString()}
+
+${status >= 400 ? '⚠️ *Perhatian! Request gagal!*' : '✅ *Request berhasil diproses*'}
+  `;
+
+  const inlineKeyboard = {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: `🚫 Block IP: ${ip}`, callback_data: `block_${ip}` }],
+        [{ text: '📊 Lihat Statistik', callback_data: 'stats' }]
+      ]
+    }
+  };
+
+  ownerIds.forEach(ownerId => {
+    botInstance.sendMessage(ownerId, message.trim(), {
+      parse_mode: 'Markdown',
+      ...inlineKeyboard
+    }).catch(err => console.error('[bot] Failed to send notification:', err.message));
+  });
+}
+
+module.exports = { startBot, sendNotification };
